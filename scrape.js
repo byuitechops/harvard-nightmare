@@ -25,7 +25,7 @@ function * run() {
 
     // SET UP THE NIGHTMARE
     var nightmare = Nightmare({
-        show: true,
+        show: false,//switch to true to debug
         typeInterval: 20,
         alwaysOnTop: false,
         waitTimeout: 20 * 60 * 1000
