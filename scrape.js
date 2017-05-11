@@ -6,10 +6,13 @@ var $ = require("jquery");
 //GRAB USERNAME AND PASSWORD TO AUTHENTICATE
 var authData = JSON.parse(fs.readFileSync("./auth.json"));
 
-// TODO: GET URL LIST FROM WHATEVER CSV/JSON/WHATEVER WE ARE GETTING THEM FROM
-var urlList = ["https://content.byui.edu/file/2d0cff20-0552-46df-ae0f-bd360834dc98/1/717416p2.pdf", "https://content.byui.edu/file/3f25ecb2-3c08-4dd6-b1f1-06f0bfea25c9/1/715044p2.pdf", "https://content.byui.edu/file/8320da89-1b6d-4e0f-b4cc-166fda60a418/1/817031p2.pdf","https://content.byui.edu/file/aa9b6af5-b882-48f5-8321-caca980e5ec9/1/lesson%203%20Readings%20and%20tutorials.pdf","https://content.byui.edu/file/aa9b6af5-b882-48f5-8321-caca980e5ec9/1/Lesson%203%20Components%20and%20Databinding.pdf"]
-//CONVERTED URLS
-var newUrlList = []; // Do we need this anywhere?
+var data = JSON.parse(fs.readFileSync("./source.json")); //reads the information from the source file
+var urlList = [];
+//Populate urlList
+for (var i = 0; i < data.length; i++)
+    urlList.push(data[i].URL);
+
+//The element on the pages that contains "Owner:"
 var selector = "#adjacentuls ul"
 
 vo(run)(function (err, result) {
@@ -17,7 +20,7 @@ vo(run)(function (err, result) {
 })
 
 
-function * run() {
+function* run() {
     // CLEAR OUT THE RESPONSES FILE
     fs.writeFile("responses.json", "", function (err) {
         if (err) throw err
@@ -25,33 +28,28 @@ function * run() {
 
     // SET UP THE NIGHTMARE
     var nightmare = Nightmare({
-        show: false,//switch to true to debug
+        show: false, //switch to true to debug
         typeInterval: 20,
         alwaysOnTop: false,
         waitTimeout: 20 * 60 * 1000
     });
 
     //LOG INTO BRIGHTSPACE SO THAT YOU HAVE BEEN AUTHENTICATED FOR LATER
-        yield nightmare
+    yield nightmare
         .goto('https://secure.byui.edu/cas/login?service=https://web.byui.edu/Services/Login/?RedirectURL=https%3a%2f%2fmy.byui.edu%2f')
         .type("#username", authData.username)
         .type("#password", authData.password)
         .click("input.btn-login")
-        .wait(function () {
-            //go to d2l home
-            console.log("Waiting");
-            return document.location.href === "https://my.byui.edu/ics";
-        })
+    //This wait used to wait for byui's home page to load. Now it doesn't. Re-write wait if you get auth errors.
+        .wait(250)
         .catch(function (error) {
             console.error(error);
         });
 
     // GO AND DO
     for (var i = 0; i < urlList.length; i++) {
+        //Find where the nightmare is SUPPOSED to go based on file URLs
         var destination = fixURL(urlList[i]);
-        newUrlList.push(destination); // Adds the fixed url to the newUrlList array
-        //        console.log(newUrlList);
-        //        console.log(destination);
         yield nightmare
             .goto(destination)
             .wait(selector)
@@ -65,26 +63,29 @@ function * run() {
                 }
                 return {
                     log: Console.message,
-                    doc: $(selector + " li:contains(Owner)").text() //the only line of jquery
+                    // Looks for the "Owner" li and saves everything after "Owner: "
+                    doc: $(selector + " li:contains(Owner)").text().split(": ")[1] //THIS IS LITERALLY THE ONLY LINE THAT USES JQUERY.
                 };
             }, selector)
             .then(function (response) {
 
-                console.log(typeof response.doc)
-                    //Adds the response to a txt document - TODO: make csv's instead
-                fs.appendFile("responses.json", "{PageURL: " + JSON.stringify(destination) + ", " + response.doc + "}, \n", function (err) {
-                    if (err) throw err
-                })
+                console.log("Owner of file " + (i + 1)+ ": " + response.doc)
+                    //APPENDS THE "OWNER" TO SOURCE DATA
+                data[i]["OWNER"] = response.doc;
             })
             .catch(function (error) {
                 console.error(error);
-
             });
     }
     yield nightmare.end()
+    //EXPORT THE SCRAPED OWNERS TO A FILE
+    fs.writeFile("responses.json", JSON.stringify(data), function (err) {
+        if (err) throw err
+    })
 }
 
-// Resolves .pdf links to equella item pages
+
+// RESOLVES THE LINK URLs TO PAGES THAT NEED TO BE SCRAPED
 function fixURL(destination) {
     var fileid = destination.split("/")[4]; //Grabs the file name.
     var newUrl = "https://content.byui.edu/items/" + fileid + "/0/";
