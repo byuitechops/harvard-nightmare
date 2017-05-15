@@ -15,6 +15,7 @@ for (var i = 0; i < data.length; i++)
 //The element on the pages that contains "Owner:"
 var selector = "#adjacentuls ul"
 
+// Function factory runner.
 vo(run)(function (err, result) {
     if (err) throw err
 })
