@@ -32,7 +32,7 @@ function* run() {
         show: true, //switch to true to debug
         typeInterval: 20,
         alwaysOnTop: false,
-        waitTimeout: 1000//20 * 60 * 1000
+        waitTimeout: 20 * 60 * 1000
     });
 
     //LOG INTO BRIGHTSPACE SO THAT YOU HAVE BEEN AUTHENTICATED FOR LATER
@@ -53,7 +53,6 @@ function* run() {
         var destination = fixURL(urlList[i]);
         yield nightmare
             .goto(destination)
-            .wait(selector)
             .evaluate(function (selector) {
                 // gets the data from the "owner" section.
                 function Console() {
