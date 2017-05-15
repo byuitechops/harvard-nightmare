@@ -28,10 +28,10 @@ function* run() {
 
     // SET UP THE NIGHTMARE
     var nightmare = Nightmare({
-        show: false, //switch to true to debug
+        show: true, //switch to true to debug
         typeInterval: 20,
         alwaysOnTop: false,
-        waitTimeout: 20 * 60 * 1000
+        waitTimeout: 1000//20 * 60 * 1000
     });
 
     //LOG INTO BRIGHTSPACE SO THAT YOU HAVE BEEN AUTHENTICATED FOR LATER
@@ -84,10 +84,10 @@ function* run() {
     })
 }
 
-
 // RESOLVES THE LINK URLs TO PAGES THAT NEED TO BE SCRAPED
 function fixURL(destination) {
     var fileid = destination.split("/")[4]; //Grabs the file name.
+	fileid = fileid=='gen' ? destination.split("/")[5] : fileid
     var newUrl = "https://content.byui.edu/items/" + fileid + "/0/";
     return newUrl;
 }
