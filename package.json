@@ -1,0 +1,11 @@
+{
+  "name": "harvard-nightmare",
+  "version": "1.0.0",
+  "description": "No description",
+  "main": "",
+  "scripts": {
+    "test": "NA"
+  },
+  "author": "Eric Julander",
+  "license": "UNLICENSED",
+}
