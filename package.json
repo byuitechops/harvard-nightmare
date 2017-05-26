@@ -6,6 +6,9 @@
   "scripts": {
     "test": "NA"
   },
-  "author": "Eric Julander",
+  "author": "Didymus Benson",
+  "contributors": [{
+    "name": "Benjamin Earl"
+  }],
   "license": "UNLICENSED",
 }
